@@ -8,8 +8,23 @@ import {pool} from '../config/db.js';
  */
 export async function query(text, params) {
   const start = Date.now();
+  try {
+    const res = await pool.query(text, params);
+    const duration = Date.now() - start;
+    console.log('🧪 requête exécutée', { text, duration, rows: res.rowCount });
+    return res;
+  } catch (err) {
+    console.error('❌ Erreur requête SQL', { text, err });
+    throw err;
+  }
+}
+
+
+/* export async function query(text, params) {
+  const start = Date.now();
   const res = await pool.query(text, params);
   const duration = Date.now() - start;
   console.log('🧪 requête exécutée', { text, duration, rows: res.rowCount });
   return res;
 }
+ */

@@ -4,11 +4,12 @@ import { authenticateToken } from '../middlewares/authenticateToken.js';
 import { authorizeRole } from '../middlewares/authorizeRole.js'; // à créer si besoin
 import { signupSchema } from '../validators/user.validator.js';
 import { validate } from '../middlewares/validate.js';
-
-
+import { loginRateLimiter } from '../middlewares/rateLimiter.js';
 
 
 const router = express.Router();
+
+
 
 /**
  * @route   POST /api/v1/users/signup
@@ -23,7 +24,8 @@ router.post('/signup', validate(signupSchema), signup);
  * @desc    Authentifier un utilisateur et renvoyer un token
  * @access  Public
  */
-router.post('/login', login);
+router.post('/login', loginRateLimiter, login);
+/* router.post('/login', login); */
 
 /**
  * @route   GET /api/v1/users/me
