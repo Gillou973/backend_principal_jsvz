@@ -2,6 +2,11 @@ import express from 'express';
 import { signup, login, getProfile, getAllUsers, deleteUser } from '../controllers/user.controller.js';
 import { authenticateToken } from '../middlewares/authenticateToken.js';
 import { authorizeRole } from '../middlewares/authorizeRole.js'; // à créer si besoin
+import { signupSchema } from '../validators/user.validator.js';
+import { validate } from '../middlewares/validate.js';
+
+
+
 
 const router = express.Router();
 
@@ -10,7 +15,8 @@ const router = express.Router();
  * @desc    Créer un nouvel utilisateur
  * @access  Public
  */
-router.post('/signup', signup);
+router.post('/signup', validate(signupSchema), signup);
+/* router.post('/signup', signup); */
 
 /**
  * @route   POST /api/v1/users/login

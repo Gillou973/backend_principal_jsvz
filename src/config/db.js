@@ -9,9 +9,15 @@ if (!process.env.DATABASE_URL) {
   process.exit(1);
 }
 
-const pool = new Pool({
+export const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
+  max: 10,
+  idleTimeoutMillis: 10000,
+  connectionTimeoutMillis: 5000,
 });
+/* const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+}); */
 
 // Log de confirmation au démarrage
 pool.connect()
@@ -24,4 +30,4 @@ pool.connect()
     process.exit(1);
   });
 
-export default pool;
+/* export default pool; */

@@ -1,13 +1,22 @@
-import pool from '../config/db.js';
+import { query } from '../utils/db.js';
+//import { query } from '../config/db.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
+import { signupSchema } from '../validators/user.validator.js';
 
 /**
  * @route   POST /api/v1/users/signup
  * @desc    Inscription d'un nouvel utilisateur
  */
 export const signup = async (req, res) => {
+
+  //validator
+  const parseResult = signupSchema.safeParse(req.body);
+  if (!parseResult.success) {
+    return res.status(400).json({ error: parseResult.error.flatten() });
+  }
+
   const { nom, prenom, adresse, email, telephone, password } = req.body;
 
   // Validation basique (à remplacer par Joi/Zod dans un second temps)
@@ -17,7 +26,7 @@ export const signup = async (req, res) => {
 
   try {
     // Vérifier que l'email n'existe pas déjà
-    const existing = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
+    const existing = await query('SELECT id FROM users WHERE email = $1', [email]);
     if (existing.rowCount > 0) {
       return res.status(409).json({ error: 'Email déjà utilisé' });
     }
@@ -25,7 +34,7 @@ export const signup = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const id = uuidv4();
 
-    const result = await pool.query(
+    const result = await query(
       `INSERT INTO users (id, nom, prenom, adresse, email, telephone, password)
        VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING id, email, role`,
@@ -47,7 +56,7 @@ export const login = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const result = await pool.query(`SELECT * FROM users WHERE email = $1`, [email]);
+    const result = await query(`SELECT * FROM users WHERE email = $1`, [email]);
     const user = result.rows[0];
 
     if (!user || !(await bcrypt.compare(password, user.password))) {
@@ -75,7 +84,7 @@ export const login = async (req, res) => {
  */
 export const getProfile = async (req, res) => {
   try {
-    const result = await pool.query(
+    const result = await query(
       `SELECT id, nom, prenom, adresse, email, telephone, role, date_creation
        FROM users WHERE id = $1`,
       [req.user.id]
@@ -102,7 +111,7 @@ export const getAllUsers = async (req, res) => {
   const offset = parseInt(req.query.offset) || 0;
 
   try {
-    const result = await pool.query(
+    const result = await query(
       `SELECT id, nom, prenom, adresse, email, telephone, role, date_creation
        FROM users
        ORDER BY date_creation DESC
@@ -110,7 +119,7 @@ export const getAllUsers = async (req, res) => {
       [limit, offset]
     );
 
-    const count = await pool.query(`SELECT COUNT(*) FROM users`);
+    const count = await query(`SELECT COUNT(*) FROM users`);
     const total = parseInt(count.rows[0].count);
 
     res.json({
@@ -138,7 +147,7 @@ export const deleteUser = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const result = await pool.query('DELETE FROM users WHERE id = $1 RETURNING id', [id]);
+    const result = await query('DELETE FROM users WHERE id = $1 RETURNING id', [id]);
 
     if (result.rowCount === 0) {
       return res.status(404).json({ error: "Utilisateur non trouvé" });

@@ -11,17 +11,23 @@ dotenv.config();
 const app = express();
 
 // Middlewares globaux
-app.use(cors()); // à sécuriser en prod avec { origin: ... }
+const corsOptions = {
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  credentials: true,
+};
+app.use(cors(corsOptions));
+
+//app.use(cors()); // à sécuriser en prod avec { origin: ... }
 app.use(helmet());
 app.use(express.json());
 app.use(morgan('dev'));
 
 // Routes principales
-app.use('/api/users', userRoutes);
+app.use('/api/v1/users', userRoutes);
 
 // Route racine de test
 app.get('/', (req, res) => {
-  res.json({ message: 'API opérationnelle 🎉' });
+  res.json({ message: '✅ API Backend_Principal opérationnelle 🎉' });
 });
 
 // Gestion des routes non trouvées
